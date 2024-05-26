@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  subCategories SubCategory[]
+  product Product[]
+}
+
+model SubCategory {
+  id         Int        @id @default(autoincrement())
+  categoryId Int
+  name       String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  products   ProductSubCategory[]
+}
+
+model Product {
+  id          Int            @id @default(autoincrement())
+  categoryId  Int
+  name        String
+  supplierId  Int
+  price       Float
+  photo       String?
+  category    Category       @relation(fields: [categoryId], references: [id])
+  supplier    Supplier       @relation(fields: [supplierId], references: [id])
+  subCategory ProductSubCategory[]
+  productDetails ProductDetails[]
+}
+
+model ProductSubCategory {
+  productId    Int        @map("ProductID")
+  subCategoryId Int        @map("SubCategoryID")
+  product      Product    @relation(fields: [productId], references: [id])
+  subCategory  SubCategory @relation(fields: [subCategoryId], references: [id])
+
+  @@id([productId, subCategoryId])
+}
+
+model ProductDetails {
+  id        Int       @id @default(autoincrement())
+  productId Int
+  color     String
+  quantity  Int
+  product   Product   @relation(fields: [productId], references: [id])
+  orderDetail OrderDetail[]
+}
+
+model Supplier {
+  id          Int       @id @default(autoincrement())
+  name        String
+  phoneNumber String?
+  email       String    @unique
+  photo       String?
+  products    Product[]
+}
+
+model Customer {
+  id          Int       @id @default(autoincrement())
+  name        String
+  phoneNumber String?
+  email       String    @unique
+  city        String?
+  password    String
+  photo       String?
+  orders      Order[]
+}
+
+model Order {
+  id           Int            @id @default(autoincrement())
+  customerId   Int
+  orderDate    DateTime
+  totalAmount  Float
+  isPaid       Boolean
+  customer     Customer       @relation(fields: [customerId], references: [id])
+  orderDetails OrderDetail[]
+}
+
+model OrderDetail {
+  id              Int     @id @default(autoincrement())
+  orderId         Int
+  productDetailId Int
+  quantity        Int
+  unitPrice       Float
+  order           Order   @relation(fields: [orderId], references: [id])
+  productDetail   ProductDetails @relation(fields: [productDetailId], references: [id])
+}
+
+enum Role {
+  USER 
+  ADMIN
+}
+
+model Admin {
+  id          Int      @id @default(autoincrement())
+  name        String
+  username    String   @unique
+  password    String
+  email       String   @unique
+  phoneNumber String?
+  role        Role     @default(USER)
+  dateOfBirth DateTime?
+  photo       String?
+}
+
